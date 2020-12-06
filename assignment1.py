@@ -67,11 +67,10 @@ class RS_perceptron:
 
 data = data_generator(10)
 # plot_data(data)
-X = data[:,0:1]
+X = data[:,0:2]
 D = data[:,2]
 rbp = RS_perceptron(600, 0.1)
 model = rbp.train(X, D)
-# print(model.w)
 plot_decision_regions(X, D.astype(np.integer), clf=model)
 plt.title('Perceptron')
 plt.xlabel('X1')
