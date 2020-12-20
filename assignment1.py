@@ -5,18 +5,17 @@ import matplotlib.pyplot as plt
 from mlxtend.plotting import plot_decision_regions
 
 
-def data_generator(P):
-    data = np.array([[0 for i in range(3)] for j in range(P)], dtype = float)
+def data_generator(P, N):
+    data = np.array([[0 for i in range(N+1)] for j in range(P)], dtype = float)
     for i in range(P):
-        # data[i,2] = random.choice([0,1])
         if i < P/2:
-            data[i,0] = gauss(0,1)
-            data[i,1] = gauss(0,1)
-            data[i,2] = -1
+            entry = np.random.normal(0, 1, size=N+1)
+            entry[N] = -1
+            data[i] = entry
         else:
-            data[i,0] = gauss(3,1)
-            data[i,1] = gauss(3,1)
-            data[i,2] = 1
+            entry = np.random.normal(3, 1, size=N+1)
+            entry[N] = 1
+            data[i] = entry
     return data
 
 def plot_data(data):
@@ -38,7 +37,7 @@ def plot_data(data):
 
 class RS_perceptron:
   # Constructor
-    def __init__(self, nmax = 100, learning_rate = 0.1):
+    def __init__(self, nmax, learning_rate = 0.1):
         self.nmax = nmax
         self.learning_rate = learning_rate
         self.desout = 0
@@ -79,14 +78,38 @@ class RS_perceptron:
         outcome = np.dot(sample, self.w[1:]*self.desout)
         return np.where(outcome > 0, 0, 1)
 
-data = data_generator(10)
-# plot_data(data)
-X = data[:,0:2]
-D = data[:,2]
-rbp = RS_perceptron(500, 0.1)
-model = rbp.train(X, D)
-plot_decision_regions(X, D.astype(np.integer), clf=model)
-plt.title('Perceptron')
-plt.xlabel('X1')
-plt.ylabel('X2')
-plt.show()
+def run_simulation(N = 20, alpha = 0.75, nmax = 100):
+    P = int(N * alpha)
+    assert (P >= 1), "P should be at least 1"
+    data = data_generator(P, N)
+    X = data[:,0:N]
+    D = data[:,N]
+    rbp = RS_perceptron(nmax)
+    model = rbp.train(X, D)
+    # plot_decision_regions(X, D.astype(np.integer), clf=model)
+    prediction = model.predict(X)
+
+    correct = 0
+    for i in range(0, len(prediction)):
+        if (prediction[i]) == 1 and (D[i] == 1):
+            correct += 1
+        if (prediction[i]) == 0 and (D[i] == -1):
+            correct += 1
+    return correct == P
+
+
+ND_values = [50]
+N_values = [5, 20, 50, 100, 150, 250, 500]
+alpha_values = np.arange(start=0.75, stop=5.25, step=.25)
+nmax_values = [100]
+
+for N in N_values:
+    for alpha in alpha_values:
+        for nmax in nmax_values:
+            for ND in ND_values:
+                successfull_runs = 0
+                for i in range(0, ND):
+                    succes = run_simulation(N, alpha, nmax)
+                    if succes: 
+                        successfull_runs += 1
+                print("N: {}, alpha: {}, nmax: {}, ND: {}, Succesfull runs: {}".format(N, alpha, nmax, ND, successfull_runs))
